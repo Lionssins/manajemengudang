@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Gudang</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        .bg-masuk { background-color: #10b981; color: white; border: 1px solid #059669; }
+        .bg-keluar { background-color: #f59e0b; color: white; border: 1px solid #d97706; }
+        .day-badges-container::-webkit-scrollbar { display: none; }
+        .day-badges-container { scrollbar-width: none; }
+        html { scroll-behavior: smooth; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800">
+
+    <div id="mainApp">
+        <nav class="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-50">
+            <div class="w-full max-w-screen-2xl mx-auto px-2 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-warehouse text-2xl"></i>
+                    <h1 class="text-xl font-bold tracking-wide">MANAJEMEN GUDANG</h1>
+                </div>
+                <button onclick="alert('Menu Admin (Bisa ditambahkan nanti)')" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded-lg text-sm transition shadow flex items-center gap-2">
+                    <i class="fas fa-user-shield"></i> <span class="hidden md:inline">Admin Login</span>
+                </button>
+            </div>
+        </nav>
+
+        <div class="w-full max-w-screen-2xl mx-auto p-4 mt-2">
+            <div class="bg-white p-4 md:p-6 rounded-xl shadow-md w-full">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-4 border-b pb-4">
+                    <h2 class="text-2xl font-bold text-gray-700 flex items-center gap-2">
+                        <i class="far fa-calendar-alt text-blue-600"></i> JADWAL TRANSAKSI GUDANG
+                    </h2>
+                    <div class="flex gap-2">
+                        <select id="yearSelect" class="border border-gray-300 rounded-lg p-2 bg-gray-50 outline-none font-semibold text-gray-700" onchange="renderCalendar()"></select>
+                        <select id="monthSelect" class="border border-gray-300 rounded-lg p-2 bg-gray-50 outline-none font-semibold text-gray-700" onchange="renderCalendar()">
+                            <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
+                            <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
+                            <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
+                            <option value="9">Oktober</option><option value="10">November</option><option value="11">Desember</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-7 gap-1 text-center mb-2 font-bold text-gray-500 text-sm md:text-base">
+                    <div class="text-red-500">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+                </div>
+                <div id="calendar" class="grid grid-cols-7 gap-1 text-sm bg-gray-100 border border-gray-200 rounded-lg p-1"></div>
+                
+                <div class="mt-6 flex flex-wrap gap-6 text-xs md:text-sm justify-center font-semibold bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <span class="flex items-center gap-2"><div class="w-5 h-5 bg-masuk rounded shadow-sm"></div> Barang Masuk</span>
+                    <span class="flex items-center gap-2"><div class="w-5 h-5 bg-keluar rounded shadow-sm"></div> Barang Keluar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="captureApp" style="display: none;" class="min-h-screen bg-gray-900 text-white pb-10">
+        <div class="bg-gray-800 p-4 shadow-lg sticky top-0 z-50 text-center border-b border-gray-700">
+            <h1 class="text-xl font-bold tracking-wide text-blue-400"><i class="fas fa-camera"></i> UPLOAD BUKTI GUDANG</h1>
+            <p id="captureIdDisplay" class="text-xs text-gray-400 mt-1"></p>
+        </div>
+        
+        <div class="max-w-md mx-auto p-4 mt-4 space-y-6">
+            <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                <h3 class="text-sm font-bold text-gray-300 mb-2"><i class="fas fa-map-marker-alt text-red-500"></i> Lokasi Saat Ini (GPS)</h3>
+                <div id="gpsStatus" class="text-xs text-yellow-400 animate-pulse">Mencari titik koordinat...</div>
+                <div id="gpsData" class="text-sm font-mono mt-1 hidden text-green-400"></div>
+                <input type="hidden" id="latitude">
+                <input type="hidden" id="longitude">
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                    <label class="block text-sm font-bold text-gray-300 mb-2">1. Foto Kondisi Awal Gudang</label>
+                    <input type="file" accept="image/*" capture="environment" id="fotoAwal" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 bg-gray-700 rounded-lg">
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                    <label class="block text-sm font-bold text-gray-300 mb-2">2. Foto Barang (Masuk/Keluar)</label>
+                    <input type="file" accept="image/*" capture="environment" id="fotoBarang" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 bg-gray-700 rounded-lg">
+                </div>
+                <div class="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow-md">
+                    <label class="block text-sm font-bold text-gray-300 mb-2">3. Foto Kondisi Akhir Gudang</label>
+                    <input type="file" accept="image/*" capture="environment" id="fotoAkhir" class="w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 bg-gray-700 rounded-lg">
+                </div>
+            </div>
+
+            <button onclick="submitEvidence()" id="btnEvidence" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition flex justify-center items-center gap-2">
+                <i class="fas fa-cloud-upload-alt"></i> Kirim Laporan & Foto
+            </button>
+        </div>
+    </div>
+
+    <div id="viewDayModal" style="display: none; z-index: 9900;" class="fixed inset-0 bg-black bg-opacity-60 items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-6xl flex flex-col max-h-[95vh] overflow-hidden">
+            <div class="bg-blue-800 text-white p-4 flex justify-between items-center shadow-md">
+                <h3 class="font-bold text-lg md:text-xl flex items-center gap-2" id="viewDayTitle">
+                    <i class="far fa-calendar-check"></i> Detail & Jadwal Transaksi
+                </h3>
+                <button onclick="closeModal('viewDayModal')" class="text-white hover:text-red-300 font-bold text-3xl leading-none transition">&times;</button>
+            </div>
+            
+            <div class="flex flex-col lg:flex-row flex-1 overflow-y-auto bg-gray-50">
+                <div class="flex-1 p-5 lg:border-r border-gray-200">
+                    <h4 class="font-bold text-gray-700 border-b-2 border-gray-200 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fas fa-list-ul text-blue-500"></i> Daftar Transaksi Hari Ini
+                    </h4>
+                    <div id="viewDayContent" class="space-y-4"></div>
+                </div>
+
+                <div class="flex-1 p-5 bg-white lg:max-w-md">
+                    <h4 class="font-bold text-blue-700 border-b-2 border-blue-100 pb-2 mb-4 flex items-center gap-2">
+                        <i class="fas fa-plus-circle"></i> Catat Transaksi Baru
+                    </h4>
+                    <form id="PeminjamanForm" onsubmit="savePeminjaman(event)" class="space-y-4">
+                        <div class="bg-blue-50 p-3 rounded-lg border border-blue-100 flex items-center gap-3">
+                            <i class="far fa-calendar-alt text-blue-600 text-xl"></i>
+                            <div class="flex-1">
+                                <label class="block text-xs font-bold text-blue-800 uppercase tracking-wider mb-0.5">Tanggal Transaksi</label>
+                                <input type="date" id="bDate" required readonly class="w-full bg-transparent font-bold text-gray-700 outline-none cursor-not-allowed">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Divisi</label>
+                                <select id="bDivisi" required onchange="filterNamesByDivision()" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500 bg-white"></select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama PJ</label>
+                                <select id="bName" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500 bg-white">
+                                    <option value="" disabled selected>-- Pilih Divisi Dulu --</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">No. WhatsApp</label>
+                                <input type="tel" id="bPhone" required placeholder="08xxxx" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Email (Link Kamera)</label>
+                                <input type="email" id="bEmail" required placeholder="email@domain.com" class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Staff GA Pendamping</label>
+                            <select id="bStaffGA" required class="w-full border border-gray-300 rounded-lg p-2.5 bg-white outline-none focus:border-blue-500">
+                                <option value="" disabled selected>-- Memuat Data GA... --</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Transaksi</label>
+                            <select id="bType" required class="w-full border border-gray-300 rounded-lg p-2.5 bg-white outline-none focus:border-blue-500 font-bold">
+                                <option value="Barang Masuk" class="text-green-600">Barang Masuk</option>
+                                <option value="Barang Keluar" class="text-orange-600">Barang Keluar</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Deskripsi Barang</label>
+                            <textarea id="bDesc" required rows="2" placeholder="Contoh: Masuk 50 Dus Kertas HVS..." class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500 resize-none"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Estimasi Mulai</label>
+                                <input type="time" id="bStart" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Estimasi Selesai</label>
+                                <input type="time" id="bEnd" required class="w-full border border-gray-300 rounded-lg p-2.5 outline-none focus:border-blue-500">
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btnSubmit" class="w-full mt-6 bg-green-600 hover:bg-green-700 text-white font-bold py-3.5 rounded-lg shadow-md transition flex justify-center items-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Simpan & Kirim Email Link
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWeO0AkCURCcE4vGNBH5bCN-uipQBZzzbTxsxlqjN0MJBzZLcyna_6bcWn2xXMsX9N/exec'; 
+
+        let Peminjamans = [];
+        let employeesData = []; 
+
+        const today = new Date();
+        let currentMonth = today.getMonth();
+        let currentYear = today.getFullYear();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const captureId = urlParams.get('capture');
+
+            if(captureId) {
+                document.getElementById('mainApp').style.display = 'none';
+                document.getElementById('captureApp').style.display = 'block';
+                document.getElementById('captureIdDisplay').innerText = "ID Transaksi: " + captureId;
+                initGeolocation();
+            } else {
+                initControls();
+                document.getElementById('calendar').innerHTML = "<div class='col-span-7 text-center py-20 text-blue-600 font-bold text-lg'><i class='fas fa-spinner fa-spin text-3xl mb-3'></i><br>Memuat Database...</div>";
+                loadPeminjamans();
+            }
+        });
+
+        function initGeolocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        document.getElementById('latitude').value = position.coords.latitude;
+                        document.getElementById('longitude').value = position.coords.longitude;
+                        document.getElementById('gpsStatus').style.display = 'none';
+                        document.getElementById('gpsData').style.display = 'block';
+                        document.getElementById('gpsData').innerHTML = `Lat: ${position.coords.latitude.toFixed(6)}<br>Lng: ${position.coords.longitude.toFixed(6)}`;
+                    },
+                    error => {
+                        document.getElementById('gpsStatus').innerText = "Akses GPS ditolak/gagal.";
+                        document.getElementById('gpsStatus').className = "text-xs text-red-500 font-bold";
+                    },
+                    { enableHighAccuracy: true }
+                );
+            }
+        }
+
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        async function submitEvidence() {
+            const transactionId = new URLSearchParams(window.location.search).get('capture');
+            const lat = document.getElementById('latitude').value;
+            const lng = document.getElementById('longitude').value;
+            
+            if(!lat || !lng) { alert("Tunggu titik GPS terkunci."); return; }
+            
+            const fAwal = document.getElementById('fotoAwal').files[0];
+            const fBarang = document.getElementById('fotoBarang').files[0];
+            const fAkhir = document.getElementById('fotoAkhir').files[0];
+
+            if(!fAwal || !fBarang || !fAkhir) { alert("Lengkapi ke-3 foto bukti!"); return; }
+
+            const btn = document.getElementById('btnEvidence');
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Mengupload... (Bisa butuh 1-2 menit)";
+            btn.disabled = true;
+
+            try {
+                const [b64Awal, b64Barang, b64Akhir] = await Promise.all([toBase64(fAwal), toBase64(fBarang), toBase64(fAkhir)]);
+
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    redirect: 'follow',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({
+                        action: "uploadEvidence", id: transactionId, lat: lat, lng: lng,
+                        fotoAwal: b64Awal, fotoBarang: b64Barang, fotoAkhir: b64Akhir
+                    })
+                });
+                
+                // PERBAIKAN: Baca sebagai teks dulu untuk mencegah crash jika GAS mengembalikan HTML Error
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error("Error Server Response:", responseText);
+                    throw new Error("Server tidak merespons dengan JSON. Cek setelan Deployment Apps Script.");
+                }
+
+                if (result.status === "success") {
+                    alert("Berhasil! Bukti foto dan GPS tersimpan.");
+                    btn.innerHTML = "<i class='fas fa-check'></i> Selesai";
+                    btn.classList.replace('bg-green-600', 'bg-gray-600');
+                } else { 
+                    throw new Error(result.message); 
+                }
+            } catch (error) {
+                console.error("Upload Error:", error);
+                alert(`Gagal mengupload.\nAlasan: ${error.message}`);
+                btn.innerHTML = "<i class='fas fa-cloud-upload-alt'></i> Coba Lagi";
+                btn.disabled = false;
+            }
+        }
+
+        function initControls() {
+            const mSelect = document.getElementById('monthSelect');
+            const ySelect = document.getElementById('yearSelect');
+            mSelect.value = currentMonth;
+            ySelect.innerHTML = "";
+            for(let y = currentYear - 1; y <= currentYear + 2; y++) {
+                ySelect.innerHTML += `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`;
+            }
+        }
+
+        function formatPhoneForWA(phone) {
+            if (!phone) return "";
+            let p = phone.replace(/\D/g, ''); 
+            return p.startsWith('0') ? '62' + p.substring(1) : p;
+        }
+
+        async function loadPeminjamans() {
+            try {
+                const response = await fetch(SCRIPT_URL);
+                const responseText = await response.text();
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    console.error("Error parsing Load:", responseText);
+                    throw new Error("Gagal membaca database. Response bukan JSON.");
+                }
+                
+                if (data.status === "success") {
+                    employeesData = [];
+                    for(let i = 0; i < Math.max(data.names.length, data.divisions.length); i++) {
+                        if(data.names[i] && data.divisions[i]) employeesData.push({ name: data.names[i], division: data.divisions[i] });
+                    }
+                    renderOptions('bDivisi', [...new Set(employeesData.map(e => e.division))]);
+                    renderOptions('bStaffGA', data.staffGAList || []);
+
+                    Peminjamans = (data.bookings || []).map(b => {
+                        let fDate = b.date;
+                        if (typeof fDate === 'string' && fDate.includes('T')) fDate = fDate.split('T')[0];
+                        return { ...b, date: fDate };
+                    });
+                }
+                renderCalendar();
+            } catch (error) {
+                console.error("Load Error:", error);
+                document.getElementById('calendar').innerHTML = `<div class='col-span-7 py-10 text-red-600 text-center font-bold'>Gagal memuat database.<br><span class="text-sm font-normal">${error.message}</span></div>`;
+            }
+        }
+
+        function renderOptions(id, items) {
+            const el = document.getElementById(id);
+            if(items.length === 0) return;
+            el.innerHTML = `<option value="" disabled selected>-- Pilih --</option>`;
+            items.forEach(i => { if(i) el.innerHTML += `<option value="${i}">${i}</option>`; });
+        }
+
+        function filterNamesByDivision() {
+            const div = document.getElementById('bDivisi').value;
+            const el = document.getElementById('bName');
+            el.innerHTML = `<option value="" disabled selected>-- Pilih Nama --</option>`;
+            if(div) employeesData.filter(e => e.division === div).forEach(e => { el.innerHTML += `<option value="${e.name}">${e.name}</option>`; });
+        }
+
+        function renderCalendar() {
+            currentMonth = parseInt(document.getElementById('monthSelect').value);
+            currentYear = parseInt(document.getElementById('yearSelect').value);
+            const cal = document.getElementById('calendar');
+            cal.innerHTML = '';
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for(let i = 0; i < firstDay; i++) cal.innerHTML += `<div></div>`;
+
+            for(let i = 1; i <= daysInMonth; i++) {
+                let dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+                let trans = Peminjamans.filter(b => b.date === dateStr);
+                
+                let html = `<div onclick="viewDaySchedule('${dateStr}')" class="min-h-[100px] flex flex-col rounded border ${trans.length ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'} transition p-1.5 cursor-pointer shadow-sm">
+                    <span class="font-bold ${trans.length ? 'text-blue-800' : 'text-gray-600'} text-sm mb-1">${i}</span>
+                    <div class="flex-1 overflow-y-auto space-y-1 scrollbar-hide">`;
+                
+                trans.forEach(t => {
+                    let color = t.type === 'Barang Masuk' ? 'bg-masuk' : 'bg-keluar';
+                    let icon = t.type === 'Barang Masuk' ? '<i class="fas fa-arrow-down"></i>' : '<i class="fas fa-arrow-up"></i>';
+                    html += `<div class="${color} px-1.5 py-0.5 rounded text-[10px] font-bold truncate">${icon} ${t.name.split(' ')[0]}</div>`;
+                });
+                cal.innerHTML += html + `</div></div>`;
+            }
+        }
+
+        function viewDaySchedule(dateStr) {
+            document.getElementById('bDate').value = dateStr;
+            const content = document.getElementById('viewDayContent');
+            const dObj = new Date(dateStr.split('-')[0], dateStr.split('-')[1] - 1, dateStr.split('-')[2]);
+            document.getElementById('viewDayTitle').innerHTML = `<i class="far fa-calendar-check"></i> ${dObj.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            
+            let trans = Peminjamans.filter(b => b.date === dateStr).sort((a,b) => a.start.localeCompare(b.start));
+            
+            if (trans.length === 0) {
+                content.innerHTML = `<div class="text-center text-gray-400 py-10">Belum ada transaksi</div>`;
+            } else {
+                let html = '';
+                trans.forEach(b => {
+                    let borderColor = b.type === 'Barang Masuk' ? 'border-green-500' : 'border-orange-500';
+                    let badgeColor = b.type === 'Barang Masuk' ? 'bg-masuk' : 'bg-keluar';
+                    let waLink = b.phone ? `<a href="https://wa.me/${formatPhoneForWA(b.phone)}" target="_blank" class="text-green-600 font-bold hover:underline">WA: ${b.phone}</a>` : '';
+                    
+                    let fotoHtml = '';
+                    if (b.fotoAwal && b.fotoAwal.includes('http')) {
+                        fotoHtml = `
+                        <div class="mt-4 pt-3 border-t border-gray-100">
+                            <span class="text-xs font-bold text-gray-600 mb-2 block"><i class="fas fa-image text-blue-400"></i> Bukti Lampiran:</span>
+                            <div class="flex gap-3 overflow-x-auto pb-2">
+                                <a href="${b.fotoAwal}" target="_blank"><img src="${b.fotoAwal}" class="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200 hover:opacity-80 transition" title="Foto Awal"></a>
+                                <a href="${b.fotoBarang}" target="_blank"><img src="${b.fotoBarang}" class="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200 hover:opacity-80 transition" title="Foto Barang"></a>
+                                <a href="${b.fotoAkhir}" target="_blank"><img src="${b.fotoAkhir}" class="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200 hover:opacity-80 transition" title="Foto Akhir"></a>
+                            </div>
+                            <div class="text-[10px] text-gray-500 mt-1"><i class="fas fa-map-marker-alt text-red-400"></i> Koordinat GPS: ${b.lat}, ${b.lng}</div>
+                        </div>`;
+                    }
+
+                    html += `
+                    <div class="p-4 rounded-lg border bg-white shadow-sm border-l-4 ${borderColor}">
+                        <div class="font-bold text-base mb-2 flex justify-between border-b pb-2">
+                            <span>${b.name}</span>
+                            <span class="px-2 py-0.5 rounded text-[10px] text-white ${badgeColor}">${b.type}</span>
+                        </div>
+                        <div class="space-y-1.5 text-sm text-gray-700">
+                            <div><i class="fas fa-box text-gray-400 w-5"></i> ${b.desc}</div>
+                            <div><i class="far fa-clock text-blue-400 w-5"></i> ${b.start} - ${b.end} WIB</div>
+                            <div><i class="fas fa-user-tie text-purple-400 w-5"></i> Pendamping: <b>${b.staffGA || '-'}</b></div>
+                            <div class="text-xs flex gap-4 mt-2 pt-2 border-t border-gray-50">
+                                <span><i class="fas fa-envelope text-red-400"></i> ${b.email}</span>
+                                <span>${waLink}</span>
+                            </div>
+                        </div>
+                        ${fotoHtml}
+                    </div>`;
+                });
+                content.innerHTML = html;
+            }
+            document.getElementById('viewDayModal').style.display = 'flex';
+        }
+
+        async function savePeminjaman(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            const originalText = btn.innerHTML;
+            
+            const transactionId = Date.now().toString();
+            const captureLink = window.location.href.split('?')[0] + "?capture=" + transactionId;
+
+            const newTrans = { 
+                id: transactionId, 
+                name: `${document.getElementById('bName').value} (${document.getElementById('bDivisi').value})`,
+                type: document.getElementById('bType').value, 
+                date: document.getElementById('bDate').value, 
+                start: document.getElementById('bStart').value, 
+                end: document.getElementById('bEnd').value, 
+                phone: document.getElementById('bPhone').value, 
+                email: document.getElementById('bEmail').value, 
+                desc: document.getElementById('bDesc').value, 
+                staffGA: document.getElementById('bStaffGA').value,
+                linkKamera: captureLink
+            };
+
+            if (newTrans.start >= newTrans.end) { alert("Jam selesai harus lebih akhir!"); return; }
+
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Menyimpan & Mengirim Email...";
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST', 
+                    redirect: 'follow', 
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: "save", booking: newTrans })
+                });
+                
+                // PERBAIKAN: Tangkap respon sebagai text dulu agar tidak crash
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (err) {
+                    console.error("Error dari GAS (Bukan JSON):", responseText);
+                    throw new Error("Akses ditolak atau script error. Pastikan App Script di-deploy dengan akses 'Siapa Saja' (Anyone).");
+                }
+
+                if (result.status === 'error') throw new Error(result.message);
+
+                Peminjamans.push(newTrans);
+                renderCalendar();
+                alert(`Berhasil! Email berisi Link Kamera telah dikirim ke: ${newTrans.email}`);
+                
+                document.getElementById('PeminjamanForm').reset();
+                document.getElementById('bDate').value = newTrans.date;
+                closeModal('viewDayModal'); 
+                
+            } catch (error) { 
+                console.error("Save Error:", error);
+                alert(`Gagal Menyimpan.\n\nAlasan: ${error.message}\nSilakan cek inspect element (console) untuk detailnya.`);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        window.closeModal = id => document.getElementById(id).style.display = 'none';
+    </script>
+</body>
+</html>

@@ -231,11 +231,13 @@
                         document.getElementById('gpsData').innerHTML = `Lat: ${position.coords.latitude.toFixed(6)}<br>Lng: ${position.coords.longitude.toFixed(6)}`;
                     },
                     error => {
-                        document.getElementById('gpsStatus').innerText = "Akses GPS ditolak/gagal.";
-                        document.getElementById('gpsStatus').className = "text-xs text-red-500 font-bold";
+                        document.getElementById('gpsStatus').innerText = "Akses GPS ditolak/gagal. Pastikan izin lokasi diaktifkan.";
+                        document.getElementById('gpsStatus').className = "text-xs text-red-500 font-bold mt-2";
                     },
-                    { enableHighAccuracy: true }
+                    { enableHighAccuracy: true, timeout: 10000 }
                 );
+            } else {
+                document.getElementById('gpsStatus').innerText = "Browser tidak mendukung GPS.";
             }
         }
 
@@ -251,7 +253,7 @@
             const lat = document.getElementById('latitude').value;
             const lng = document.getElementById('longitude').value;
             
-            if(!lat || !lng) { alert("Tunggu titik GPS terkunci."); return; }
+            if(!lat || !lng) { alert("Tunggu titik GPS terkunci. Pastikan izin lokasi diberikan."); return; }
             
             const fAwal = document.getElementById('fotoAwal').files[0];
             const fBarang = document.getElementById('fotoBarang').files[0];
@@ -276,13 +278,11 @@
                     })
                 });
                 
-                // PERBAIKAN: Baca sebagai teks dulu untuk mencegah crash jika GAS mengembalikan HTML Error
                 const responseText = await response.text();
                 let result;
                 try {
                     result = JSON.parse(responseText);
                 } catch (e) {
-                    console.error("Error Server Response:", responseText);
                     throw new Error("Server tidak merespons dengan JSON. Cek setelan Deployment Apps Script.");
                 }
 
@@ -326,14 +326,19 @@
                 try {
                     data = JSON.parse(responseText);
                 } catch (e) {
-                    console.error("Error parsing Load:", responseText);
-                    throw new Error("Gagal membaca database. Response bukan JSON.");
+                    throw new Error("Gagal membaca database. Pastikan Endpoint GAS Web App merespons dengan valid JSON.");
                 }
                 
                 if (data.status === "success") {
                     employeesData = [];
-                    for(let i = 0; i < Math.max(data.names.length, data.divisions.length); i++) {
-                        if(data.names[i] && data.divisions[i]) employeesData.push({ name: data.names[i], division: data.divisions[i] });
+                    // Fallback kosong untuk mencegah crash .length jika GAS gagal merespons array
+                    const names = data.names || [];
+                    const divisions = data.divisions || [];
+                    
+                    for(let i = 0; i < Math.max(names.length, divisions.length); i++) {
+                        if(names[i] && divisions[i]) {
+                            employeesData.push({ name: names[i], division: divisions[i] });
+                        }
                     }
                     renderOptions('bDivisi', [...new Set(employeesData.map(e => e.division))]);
                     renderOptions('bStaffGA', data.staffGAList || []);
@@ -353,7 +358,10 @@
 
         function renderOptions(id, items) {
             const el = document.getElementById(id);
-            if(items.length === 0) return;
+            if(!items || items.length === 0) {
+                el.innerHTML = `<option value="" disabled selected>-- Data Kosong --</option>`;
+                return;
+            }
             el.innerHTML = `<option value="" disabled selected>-- Pilih --</option>`;
             items.forEach(i => { if(i) el.innerHTML += `<option value="${i}">${i}</option>`; });
         }
@@ -362,7 +370,11 @@
             const div = document.getElementById('bDivisi').value;
             const el = document.getElementById('bName');
             el.innerHTML = `<option value="" disabled selected>-- Pilih Nama --</option>`;
-            if(div) employeesData.filter(e => e.division === div).forEach(e => { el.innerHTML += `<option value="${e.name}">${e.name}</option>`; });
+            if(div) {
+                employeesData.filter(e => e.division === div).forEach(e => { 
+                    el.innerHTML += `<option value="${e.name}">${e.name}</option>`; 
+                });
+            }
         }
 
         function renderCalendar() {
@@ -380,7 +392,7 @@
                 let dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let trans = Peminjamans.filter(b => b.date === dateStr);
                 
-                let html = `<div onclick="viewDaySchedule('${dateStr}')" class="min-h-[100px] flex flex-col rounded border ${trans.length ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'} transition p-1.5 cursor-pointer shadow-sm">
+                let html = `<div onclick="viewDaySchedule('${dateStr}')" class="min-h-[100px] flex flex-col rounded border ${trans.length ? 'border-blue-300 bg-blue-50' : 'border-gray-200 bg-white'} transition p-1.5 cursor-pointer shadow-sm hover:shadow-md">
                     <span class="font-bold ${trans.length ? 'text-blue-800' : 'text-gray-600'} text-sm mb-1">${i}</span>
                     <div class="flex-1 overflow-y-auto space-y-1 scrollbar-hide">`;
                 
@@ -420,7 +432,7 @@
                                 <a href="${b.fotoBarang}" target="_blank"><img src="${b.fotoBarang}" class="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200 hover:opacity-80 transition" title="Foto Barang"></a>
                                 <a href="${b.fotoAkhir}" target="_blank"><img src="${b.fotoAkhir}" class="w-24 h-24 object-cover rounded-lg shadow-sm border border-gray-200 hover:opacity-80 transition" title="Foto Akhir"></a>
                             </div>
-                            <div class="text-[10px] text-gray-500 mt-1"><i class="fas fa-map-marker-alt text-red-400"></i> Koordinat GPS: ${b.lat}, ${b.lng}</div>
+                            <div class="text-[10px] text-gray-500 mt-1"><i class="fas fa-map-marker-alt text-red-400"></i> Koordinat GPS: ${b.lat || '-'}, ${b.lng || '-'}</div>
                         </div>`;
                     }
 
@@ -469,9 +481,9 @@
                 linkKamera: captureLink
             };
 
-            if (newTrans.start >= newTrans.end) { alert("Jam selesai harus lebih akhir!"); return; }
+            if (newTrans.start >= newTrans.end) { alert("Jam selesai harus lebih akhir dari jam mulai!"); return; }
 
-            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Menyimpan & Mengirim Email...";
+            btn.innerHTML = "<i class='fas fa-spinner fa-spin'></i> Menyimpan & Mengirim...";
             btn.disabled = true;
 
             try {
@@ -482,14 +494,12 @@
                     body: JSON.stringify({ action: "save", booking: newTrans })
                 });
                 
-                // PERBAIKAN: Tangkap respon sebagai text dulu agar tidak crash
                 const responseText = await response.text();
                 let result;
                 try {
                     result = JSON.parse(responseText);
                 } catch (err) {
-                    console.error("Error dari GAS (Bukan JSON):", responseText);
-                    throw new Error("Akses ditolak atau script error. Pastikan App Script di-deploy dengan akses 'Siapa Saja' (Anyone).");
+                    throw new Error("Akses ditolak atau script error. Pastikan App Script di-deploy dengan akses 'Anyone'.");
                 }
 
                 if (result.status === 'error') throw new Error(result.message);
@@ -504,7 +514,7 @@
                 
             } catch (error) { 
                 console.error("Save Error:", error);
-                alert(`Gagal Menyimpan.\n\nAlasan: ${error.message}\nSilakan cek inspect element (console) untuk detailnya.`);
+                alert(`Gagal Menyimpan.\n\nAlasan: ${error.message}`);
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;

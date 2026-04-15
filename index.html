@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Manajemen Gudang - Fixed Foto & Form</title>
+    <title>Sistem Manajemen Gudang - Digital</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .calendar-day { min-height: 110px; transition: all 0.2s; border-radius: 1rem; }
-        .calendar-day:hover { background-color: #f8fafc; transform: translateY(-2px); }
-        .img-preview-box { width: 100%; height: 120px; object-fit: cover; border-radius: 0.75rem; border: 2px dashed #e2e8f0; cursor: pointer; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
+        .calendar-day { min-height: 100px; transition: all 0.2s; border-radius: 0.75rem; }
+        .calendar-day:hover { background-color: #f4f4f5; transform: translateY(-2px); }
+        .img-preview-box { width: 100%; height: 120px; object-fit: cover; border-radius: 0.75rem; border: 2px dashed #d4d4d8; cursor: pointer; }
     </style>
 </head>
-<body class="bg-slate-50 font-sans text-slate-900">
+<body class="bg-zinc-50 font-sans text-zinc-900">
 
     <div id="calendarApp">
-        <nav class="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-50">
+        <nav class="bg-zinc-950 text-white p-4 shadow-lg sticky top-0 z-50">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div class="flex items-center gap-3">
-                    <i class="fas fa-warehouse text-2xl text-blue-400"></i>
+                    <i class="fas fa-warehouse text-2xl text-zinc-300"></i>
                     <h1 class="text-xl font-bold tracking-tight">GUDANG DIGITAL</h1>
                 </div>
-                <div id="syncStatus" class="text-xs bg-blue-800 px-3 py-1 rounded-full border border-blue-700">Menghubungkan...</div>
+                <div class="flex items-center gap-4">
+                    <div id="syncStatus" class="text-xs bg-zinc-800 px-3 py-1 rounded-full border border-zinc-700">Menghubungkan...</div>
+                    <button id="adminBtn" onclick="document.getElementById('loginModal').classList.remove('hidden')" class="text-xs font-bold bg-white text-zinc-900 px-3 py-1 rounded-full hover:bg-zinc-200 transition"><i class="fas fa-lock"></i> Admin</button>
+                    <button id="logoutBtn" onclick="logoutAdmin()" class="hidden text-xs font-bold bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700 transition"><i class="fas fa-sign-out-alt"></i> Keluar</button>
+                </div>
             </div>
         </nav>
 
         <div class="max-w-7xl mx-auto p-4 md:p-6">
-            <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-200">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-                    <h2 class="text-2xl font-black text-slate-800 flex items-center gap-3">
-                        <i class="far fa-calendar-alt text-blue-600"></i> MONITORING JADWAL
+            <div class="bg-white p-6 rounded-3xl shadow-xl border border-zinc-200">
+                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                    <h2 class="text-2xl font-black text-zinc-800 flex items-center gap-3">
+                        <i class="far fa-calendar-alt text-zinc-600"></i> JADWAL GUDANG
                     </h2>
-                    <div class="flex gap-2 bg-slate-100 p-1.5 rounded-2xl">
-                        <select id="yearSelect" class="bg-transparent font-bold px-3 py-1 outline-none" onchange="renderCalendar()"></select>
-                        <select id="monthSelect" class="bg-transparent font-bold px-3 py-1 outline-none" onchange="renderCalendar()">
+                    <div class="flex gap-2 bg-zinc-100 p-1.5 rounded-2xl border border-zinc-200">
+                        <select id="yearSelect" class="bg-transparent font-bold text-sm px-3 py-1 outline-none cursor-pointer" onchange="renderCalendar()"></select>
+                        <select id="monthSelect" class="bg-transparent font-bold text-sm px-3 py-1 outline-none cursor-pointer border-l border-zinc-300" onchange="renderCalendar()">
                             <option value="0">Januari</option><option value="1">Februari</option><option value="2">Maret</option>
                             <option value="3">April</option><option value="4">Mei</option><option value="5">Juni</option>
                             <option value="6">Juli</option><option value="7">Agustus</option><option value="8">September</option>
@@ -44,18 +48,25 @@
                         </select>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 text-center mb-4 font-bold text-slate-400 text-[10px] uppercase">
-                    <div class="text-red-500">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+
+                <div class="grid grid-cols-7 gap-1 text-center mb-2 font-bold text-zinc-500 text-[10px] uppercase tracking-wider">
+                    <div class="text-red-600">Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
                 </div>
-                <div id="calendar" class="grid grid-cols-7 gap-3"></div>
+                <div id="calendar" class="grid grid-cols-7 gap-2"></div>
+                
+                <div class="mt-6 flex flex-wrap gap-4 items-center justify-center text-xs font-bold text-zinc-600 bg-zinc-50 p-3 rounded-xl border border-zinc-100">
+                    <span class="flex items-center gap-2"><i class="fas fa-arrow-down text-green-600 bg-green-100 p-1.5 rounded-full"></i> BARANG MASUK</span>
+                    <span class="text-zinc-300">|</span>
+                    <span class="flex items-center gap-2"><i class="fas fa-arrow-up text-orange-600 bg-orange-100 p-1.5 rounded-full"></i> BARANG KELUAR</span>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="captureApp" class="hidden min-h-screen bg-slate-900 p-4">
+    <div id="captureApp" class="hidden min-h-screen bg-zinc-900 p-4">
         <div class="max-w-md mx-auto bg-white rounded-[2rem] overflow-hidden shadow-2xl">
-            <div class="bg-blue-600 p-8 text-white text-center">
-                <i class="fas fa-camera text-5xl mb-3"></i>
+            <div class="bg-zinc-950 p-8 text-white text-center">
+                <i class="fas fa-camera text-5xl mb-3 text-zinc-300"></i>
                 <h2 class="text-2xl font-black">Upload Bukti</h2>
                 <p id="captureTitle" class="text-xs opacity-70 font-mono tracking-widest">-</p>
             </div>
@@ -69,42 +80,55 @@
                 <input type="file" accept="image/*" capture="environment" id="fileAkhir" onchange="processImage(this, 'prevAkhir')" class="hidden">
                 <img id="prevAkhir" onclick="document.getElementById('fileAkhir').click()" src="https://via.placeholder.com/400x200?text=Klik+Foto+Kondisi+Akhir" class="img-preview-box">
 
-                <div id="locationInfo" class="text-[10px] text-slate-400 font-mono italic text-center">📍 Mendeteksi GPS...</div>
-                <button id="btnUpload" onclick="submitEvidence()" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">SIMPAN BUKTI FOTO</button>
+                <div id="locationInfo" class="text-[10px] text-zinc-400 font-mono italic text-center">📍 Mendeteksi GPS...</div>
+                <button id="btnUpload" onclick="submitEvidence()" class="w-full bg-zinc-950 hover:bg-black transition text-white font-black py-4 rounded-2xl shadow-lg">SIMPAN BUKTI FOTO</button>
             </div>
         </div>
     </div>
 
-    <div id="viewDayModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md items-center justify-center p-4 z-[9999]">
-        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] overflow-hidden">
-            <div class="bg-blue-900 text-white p-6 flex justify-between items-center">
-                <div><h3 class="font-black text-2xl" id="viewDayTitle">Detail Agenda</h3></div>
-                <button onclick="closeModal('viewDayModal')" class="bg-white/10 w-12 h-12 rounded-full text-3xl">&times;</button>
+    <div id="viewDayModal" class="hidden fixed inset-0 bg-zinc-900/80 backdrop-blur-sm items-center justify-center p-4 z-[9000]">
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] overflow-hidden">
+            <div class="bg-zinc-950 text-white p-6 flex justify-between items-center">
+                <div><h3 class="font-black text-xl md:text-2xl" id="viewDayTitle">Detail Agenda</h3></div>
+                <button onclick="closeModal('viewDayModal')" class="bg-white/10 hover:bg-white/20 w-10 h-10 rounded-full text-2xl transition">×</button>
             </div>
             <div class="flex flex-col lg:flex-row flex-1 overflow-hidden">
-                <div class="flex-1 p-6 bg-slate-50 overflow-y-auto border-r border-slate-100" id="viewDayContent"></div>
+                <div class="flex-1 p-6 bg-zinc-50 overflow-y-auto border-r border-zinc-200" id="viewDayContent"></div>
                 
-                <div class="w-full lg:w-[400px] p-8 bg-white overflow-y-auto">
-                    <h4 class="font-bold text-slate-700 mb-6 flex items-center gap-2"><i class="fas fa-plus-circle text-green-500"></i> Transaksi Baru</h4>
+                <div class="w-full lg:w-[400px] p-6 lg:p-8 bg-white overflow-y-auto">
+                    <h4 class="font-bold text-zinc-800 mb-6 flex items-center gap-2"><i class="fas fa-plus-circle text-zinc-500"></i> Form Agenda Baru</h4>
                     <form id="PeminjamanForm" onsubmit="savePeminjaman(event)" class="space-y-4">
                         <input type="hidden" id="bDate">
-                        <select id="bDivisi" required onchange="filterNamesByDivision()" class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></select>
-                        <select id="bName" required class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none focus:border-blue-500"></select>
-                        <input type="tel" id="bPhone" required placeholder="No. WhatsApp" class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none">
-                        <input type="email" id="bEmail" required placeholder="Email untuk Link" class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none">
-                        <select id="bStaffGA" required class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none"></select>
-                        <select id="bType" class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm font-bold bg-slate-50">
+                        <select id="bDivisi" required onchange="filterNamesByDivision()" class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50"></select>
+                        <select id="bName" required class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50"></select>
+                        <input type="tel" id="bPhone" required placeholder="No. WhatsApp" class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50">
+                        <input type="email" id="bEmail" required placeholder="Email untuk Link Bukti" class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50">
+                        <select id="bStaffGA" required class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none bg-zinc-50"></select>
+                        <select id="bType" class="w-full border border-zinc-300 rounded-xl p-3 text-sm font-bold bg-zinc-100 outline-none focus:border-zinc-800">
                             <option value="Barang Masuk">📥 MASUK</option>
                             <option value="Barang Keluar">📤 KELUAR</option>
                         </select>
-                        <textarea id="bDesc" required placeholder="Keterangan Barang..." class="w-full border-2 border-slate-100 rounded-xl p-3 text-sm outline-none"></textarea>
-                        <div class="grid grid-cols-2 gap-2">
-                            <input type="time" id="bStart" required class="border-2 border-slate-100 rounded-xl p-3 text-sm">
-                            <input type="time" id="bEnd" required class="border-2 border-slate-100 rounded-xl p-3 text-sm">
+                        <textarea id="bDesc" required placeholder="Detail Barang/Keterangan..." class="w-full border border-zinc-300 rounded-xl p-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50"></textarea>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-[10px] font-bold text-zinc-500 ml-1">Mulai</label><input type="time" id="bStart" required class="w-full border border-zinc-300 rounded-xl p-3 text-sm bg-zinc-50"></div>
+                            <div><label class="text-[10px] font-bold text-zinc-500 ml-1">Selesai</label><input type="time" id="bEnd" required class="w-full border border-zinc-300 rounded-xl p-3 text-sm bg-zinc-50"></div>
                         </div>
-                        <button type="submit" id="btnSubmit" class="w-full bg-blue-600 text-white font-black py-4 rounded-2xl shadow-lg">SIMPAN & KIRIM LINK</button>
+                        <button type="submit" id="btnSubmit" class="w-full bg-zinc-900 hover:bg-black transition text-white font-black py-4 rounded-xl shadow-md">SIMPAN & KIRIM LINK</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="hidden fixed inset-0 bg-zinc-950/80 backdrop-blur-md items-center justify-center p-4 z-[9999]">
+        <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl text-center">
+            <i class="fas fa-user-shield text-4xl text-zinc-800 mb-4"></i>
+            <h3 class="font-black text-xl mb-6 text-zinc-900">Login Admin GA</h3>
+            <input type="text" id="adminUser" placeholder="Username" class="w-full border border-zinc-300 rounded-xl p-3 mb-3 text-sm outline-none focus:border-zinc-800 bg-zinc-50">
+            <input type="password" id="adminPass" placeholder="Password" class="w-full border border-zinc-300 rounded-xl p-3 mb-6 text-sm outline-none focus:border-zinc-800 bg-zinc-50">
+            <div class="flex gap-2">
+                <button onclick="closeModal('loginModal')" class="w-1/3 bg-zinc-200 text-zinc-700 font-bold py-3 rounded-xl hover:bg-zinc-300">Batal</button>
+                <button onclick="loginAdmin()" class="w-2/3 bg-zinc-900 text-white font-bold py-3 rounded-xl hover:bg-black">Masuk</button>
             </div>
         </div>
     </div>
@@ -112,17 +136,19 @@
     <canvas id="hiddenCanvas" class="hidden"></canvas>
 
     <script>
+        // PASTIKAN SCRIPT URL ANDA BENAR DI SINI
         const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby1-7CWPbGoVNeGDCTACPbXnISz63uxsq_LgQNCQU56GInTujDQOc_IMg7KuX-PGLxKzw/exec'; 
         let Peminjamans = [];
         let employeesData = [];
         let currentLocation = { lat: 0, lng: 0 };
+        let isAdmin = false;
 
-        // --- FUNGSI FIX FOTO (DRIVE TO DIRECT LINK) ---
+        // FUNGSI FOTO
         function getDirectLink(url) {
             if (!url || url === "") return "https://via.placeholder.com/150?text=No+Photo";
             if (url.includes('drive.google.com')) {
                 const fileId = url.split('/d/')[1]?.split('/')[0] || url.split('id=')[1]?.split('&')[0];
-                return fileId ? `https://lh3.googleusercontent.com/u/0/d/${fileId}` : url;
+                return fileId ? `https://drive.google.com/thumbnail?id=${fileId}&sz=w800` : url;
             }
             return url;
         }
@@ -133,6 +159,7 @@
             else initCalendarMode();
         });
 
+        // INIT SYSTEM
         function initCalendarMode() {
             const ys = document.getElementById('yearSelect');
             const now = new Date();
@@ -161,6 +188,7 @@
             } catch (e) { document.getElementById('syncStatus').innerHTML = '❌ Error Koneksi'; }
         }
 
+        // RENDER CALENDAR (TAMPILAN BARU SIMPLE)
         function renderCalendar() {
             const m = parseInt(document.getElementById('monthSelect').value);
             const y = parseInt(document.getElementById('yearSelect').value);
@@ -168,40 +196,61 @@
             cal.innerHTML = '';
             const first = new Date(y, m, 1).getDay();
             const days = new Date(y, m+1, 0).getDate();
-            for(let i=0; i<first; i++) cal.innerHTML += `<div class="bg-slate-50/50 rounded-2xl"></div>`;
+            
+            for(let i=0; i<first; i++) cal.innerHTML += `<div class="bg-transparent"></div>`;
+            
             for(let i=1; i<=days; i++) {
                 let dStr = `${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
                 let hasData = Peminjamans.filter(b => b.date === dStr);
+                
+                let masukCount = hasData.filter(t => t.type === 'Barang Masuk').length;
+                let keluarCount = hasData.filter(t => t.type === 'Barang Keluar').length;
+                
+                let indicators = '';
+                if(masukCount > 0) indicators += `<div class="flex items-center gap-1 text-green-600 bg-green-50 px-1.5 py-0.5 rounded text-[10px] font-bold border border-green-100"><i class="fas fa-arrow-down"></i> ${masukCount}</div>`;
+                if(keluarCount > 0) indicators += `<div class="flex items-center gap-1 text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded text-[10px] font-bold border border-orange-100"><i class="fas fa-arrow-up"></i> ${keluarCount}</div>`;
+
                 cal.innerHTML += `
-                    <div onclick="viewDaySchedule('${dStr}')" class="calendar-day bg-white border-2 border-slate-100 p-2 cursor-pointer">
-                        <span class="font-bold text-sm text-slate-400">${i}</span>
-                        <div class="mt-1 space-y-1">
-                            ${hasData.map(t => `<div class="w-full h-1.5 rounded-full ${t.type==='Barang Masuk'?'bg-green-500':'bg-orange-500'}"></div>`).join('')}
+                    <div onclick="viewDaySchedule('${dStr}')" class="calendar-day bg-white border border-zinc-200 p-2 cursor-pointer flex flex-col shadow-sm">
+                        <span class="font-bold text-sm ${i === new Date().getDate() && m === new Date().getMonth() ? 'text-zinc-900 bg-zinc-200 rounded-full w-6 h-6 flex items-center justify-center' : 'text-zinc-500'}">${i}</span>
+                        <div class="mt-auto space-y-1 pt-2">
+                            ${indicators}
                         </div>
                     </div>`;
             }
         }
 
+        // VIEW DAY SCHEDULE
         window.viewDaySchedule = function(dateStr) {
             const elDate = document.getElementById('bDate');
             if(elDate) elDate.value = dateStr;
             document.getElementById('viewDayTitle').innerText = new Date(dateStr).toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long'});
             
             const filtered = Peminjamans.filter(b => b.date === dateStr);
-            let html = filtered.length ? '' : '<div class="text-center py-20 text-slate-300 italic">Kosong</div>';
+            let html = filtered.length ? '' : '<div class="text-center py-20 text-zinc-400 italic font-medium flex flex-col items-center"><i class="far fa-folder-open text-4xl mb-3 text-zinc-300"></i> Tidak ada jadwal</div>';
             
             filtered.forEach(b => {
+                let isMasuk = b.type === 'Barang Masuk';
                 html += `
-                    <div class="bg-white p-4 rounded-2xl border-l-4 shadow-sm mb-3 ${b.type==='Barang Masuk'?'border-green-500':'border-orange-500'}">
-                        <div class="flex justify-between font-bold text-sm"><span>${b.name}</span><span class="bg-slate-100 px-2 rounded-full text-[10px]">${b.type}</span></div>
-                        <p class="text-[11px] text-slate-500">${b.start} - ${b.end} | GA: ${b.staffGA}</p>
-                        <p class="text-xs mt-1 font-medium">${b.desc}</p>
+                    <div class="bg-white p-5 rounded-2xl border-l-4 shadow-sm mb-4 border border-zinc-100 ${isMasuk ? 'border-l-green-500' : 'border-l-orange-500'} relative">
+                        <div class="flex justify-between items-start font-bold text-sm text-zinc-800">
+                            <div>
+                                <span class="text-base">${b.name}</span>
+                                <p class="text-xs text-zinc-400 font-normal mt-0.5"><i class="far fa-clock"></i> ${b.start} - ${b.end} | GA: ${b.staffGA}</p>
+                            </div>
+                            <span class="flex items-center gap-1 ${isMasuk ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'} px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wide">
+                                <i class="fas ${isMasuk ? 'fa-arrow-down' : 'fa-arrow-up'}"></i> ${isMasuk ? 'MASUK' : 'KELUAR'}
+                            </span>
+                        </div>
+                        <p class="text-sm mt-3 text-zinc-600 bg-zinc-50 p-2 rounded-lg border border-zinc-100">${b.desc}</p>
                         ${b.fotoAwal ? `
-                        <div class="mt-3 grid grid-cols-3 gap-2">
-                            <img src="${getDirectLink(b.fotoAwal)}" class="h-20 w-full object-cover rounded-lg border">
-                            <img src="${getDirectLink(b.fotoBarang)}" class="h-20 w-full object-cover rounded-lg border">
-                            <img src="${getDirectLink(b.fotoAkhir)}" class="h-20 w-full object-cover rounded-lg border">
-                        </div>` : '<p class="text-[10px] text-red-400 mt-2 italic">Bukti foto belum ada</p>'}
+                        <div class="mt-4 grid grid-cols-3 gap-2">
+                            <img src="${getDirectLink(b.fotoAwal)}" class="h-24 w-full object-cover rounded-xl border border-zinc-200">
+                            <img src="${getDirectLink(b.fotoBarang)}" class="h-24 w-full object-cover rounded-xl border border-zinc-200">
+                            <img src="${getDirectLink(b.fotoAkhir)}" class="h-24 w-full object-cover rounded-xl border border-zinc-200">
+                        </div>` : '<p class="text-xs text-red-500 mt-3 font-medium bg-red-50 inline-block px-2 py-1 rounded-md"><i class="fas fa-exclamation-circle"></i> Bukti foto belum diunggah</p>'}
+                        
+                        ${isAdmin ? `<button onclick="editData('${b.id}')" class="absolute bottom-4 right-4 bg-zinc-800 text-white text-[10px] px-3 py-1.5 rounded-lg hover:bg-black transition shadow"><i class="fas fa-pen"></i> Edit Admin</button>` : ''}
                     </div>`;
             });
             document.getElementById('viewDayContent').innerHTML = html;
@@ -214,12 +263,57 @@
             if(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
         };
 
+        // ADMIN LOGIN SYSTEM
+        window.loginAdmin = function() {
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+            if(u === 'Admin' && p === 'AdminGA') {
+                isAdmin = true;
+                closeModal('loginModal');
+                document.getElementById('adminBtn').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                alert('Berhasil Login sebagai Admin GA');
+                // Refresh modal content if already open
+                if(!document.getElementById('viewDayModal').classList.contains('hidden')){
+                    viewDaySchedule(document.getElementById('bDate').value);
+                }
+            } else {
+                alert('Username atau Password salah!');
+            }
+        };
+
+        window.logoutAdmin = function() {
+            isAdmin = false;
+            document.getElementById('adminBtn').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
+            document.getElementById('adminUser').value = '';
+            document.getElementById('adminPass').value = '';
+            alert('Berhasil Logout');
+            if(!document.getElementById('viewDayModal').classList.contains('hidden')){
+                viewDaySchedule(document.getElementById('bDate').value);
+            }
+        };
+
+        window.editData = function(id) {
+            // Logika dasar edit untuk front-end (membutuhkan update Apps Script backend)
+            let newDesc = prompt("Edit Keterangan/Detail Barang:", Peminjamans.find(x => x.id === id).desc);
+            if(newDesc !== null) {
+                alert("Perintah edit dikirim ke Server. Pastikan Apps Script menangani action: 'edit' !");
+                fetch(SCRIPT_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    body: JSON.stringify({ action: "edit", id: id, desc: newDesc })
+                });
+            }
+        };
+
+        // SUBMIT & NOTIFIKASI
         async function savePeminjaman(e) {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROSES...'; btn.disabled = true;
             const id = "TRX-" + Date.now();
             const link = window.location.href.split('?')[0] + "?capture=" + id;
+            
             const b = {
                 id: id, name: `${document.getElementById('bName').value} (${document.getElementById('bDivisi').value})`,
                 type: document.getElementById('bType').value, date: document.getElementById('bDate').value,
@@ -228,13 +322,18 @@
                 desc: document.getElementById('bDesc').value, staffGA: document.getElementById('bStaffGA').value, linkKamera: link
             };
             try {
-                await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "save", booking: b }) });
-                alert("Data Tersimpan! Link Kamera dikirim ke email.");
+                // PARAMETER notifyAdmin DIMASUKKAN KE SINI AGAR APPS SCRIPT BISA MENGIRIM EMAIL KE ADMIN
+                await fetch(SCRIPT_URL, { 
+                    method: 'POST', 
+                    mode: 'no-cors', 
+                    body: JSON.stringify({ action: "save", booking: b, notifyAdmin: true }) 
+                });
+                alert("Data Tersimpan! Link Kamera dikirim ke email peminjam, dan Admin telah dinotifikasi.");
                 location.reload();
-            } catch (err) { alert("Error Simpan"); btn.disabled = false; }
+            } catch (err) { alert("Error Simpan Server"); btn.disabled = false; }
         }
 
-        // --- SISTEM KAMERA ---
+        // FUNGSI SISTEM KAMERA
         function showCaptureMode(id) {
             document.getElementById('calendarApp').classList.add('hidden');
             document.getElementById('captureApp').classList.remove('hidden');
@@ -257,7 +356,7 @@
                     const ctx = canvas.getContext('2d');
                     canvas.width = 800; canvas.height = 600;
                     ctx.drawImage(img, 0, 0, 800, 600);
-                    ctx.fillStyle = "rgba(0,0,0,0.5)"; ctx.fillRect(0, 540, 800, 60);
+                    ctx.fillStyle = "rgba(0,0,0,0.6)"; ctx.fillRect(0, 540, 800, 60);
                     ctx.fillStyle = "white"; ctx.font = "bold 14px Arial";
                     ctx.fillText(`ID: ${new URLSearchParams(window.location.search).get('capture')} | GPS: ${currentLocation.lat}, ${currentLocation.lng}`, 20, 575);
                     document.getElementById(prevId).src = canvas.toDataURL('image/jpeg', 0.7);
@@ -272,7 +371,7 @@
             const btn = document.getElementById('btnUpload');
             btn.innerText = "MENGIRIM..."; btn.disabled = true;
             const payload = {
-                action: "uploadEvidence", id: id,
+                action: "uploadEvidence", id: id, notifyAdminEvidence: true, // Beritahu backend untuk kirim notifikasi
                 fotoAwal: document.getElementById('prevAwal').src,
                 fotoBarang: document.getElementById('prevBarang').src,
                 fotoAkhir: document.getElementById('prevAkhir').src,
@@ -280,7 +379,7 @@
             };
             try {
                 await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                alert("Berhasil!"); window.location.href = window.location.href.split('?')[0];
+                alert("Berhasil Mengunggah Bukti!"); window.location.href = window.location.href.split('?')[0];
             } catch (e) { location.reload(); }
         }
 
